@@ -1,62 +1,52 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
+	"time"
 
-	_ "github.com/go-sql-driver/mysql"
+	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/mysql"
 )
 
+// gorm.Model
 type UserItem struct {
-	account    string
-	password   string
-	score      int
-	nickname   string
-	createtime string
+	Account  string `gorm:"primary_key"`
+	Password string
+	Score    int
+	NickName string `gorm:"default:'blue'"`
+	Create   time.Time
+	Login    time.Time
 }
 
-func AddOne(item UserItem) error {
-	db, err := sql.Open("mysql", "root:123456@tcp(127.0.0.1:3306)/game")
-	checkErr(err)
-	defer db.Close()
-
-	stmt, err := db.Prepare("INSERT userinfo SET account=?,password=?,score=?,nickname=?,createtime=?")
-	checkErr(err)
-
-	res, err := stmt.Exec(item.account, item.password, item.score, item.nickname, item.createtime)
-	checkErr(err)
-
-	id, err := res.LastInsertId()
-	checkErr(err)
-
-	fmt.Println(id)
-
-	return nil
-}
-
-func IsExist(account string) bool {
-	db, err := sql.Open("mysql", "root:123456@tcp(127.0.0.1:3306)/game")
-	checkErr(err)
-	defer db.Close()
-
-	var checkStr string
-	err = db.QueryRow("select account from userinfo where account = ?", account).Scan(&checkStr)
-	if err == nil {
-		return true
-	} else {
-		return false
-	}
-}
-
-func checkErr(err error) {
+func init() {
+	db, err := gorm.Open("mysql", "root:123456@/game?charset=utf8&parseTime=True&loc=Local")
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
 	}
+	if db.HasTable(&UserItem{}) {
+		db.AutoMigrate(&UserItem{})
+	} else {
+		db.CreateTable(&UserItem{})
+		db.Create(&UserItem{Account: "test001", Password: "666666", Score: 200, Create: time.Now()})
+		db.Create(&UserItem{Account: "test002", Password: "666666", Score: 200, Create: time.Now()})
+	}
+
+	db.Close()
 }
 
 func main() {
-	fmt.Println(IsExist("test003"))
-	// item := UserItem{"test002", "tttttt", 0, "小龙", strings.Split(time.Now().String(), ".")[0]}
-	// AddOne(item)
+	db, err := gorm.Open("mysql", "root:123456@/game?charset=utf8&parseTime=True&loc=Local")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 
+	var users []UserItem
+	db.Find(&users)
+
+	for _, item := range users {
+		fmt.Println(item.Account, item.Password, item.Score)
+	}
+
+	db.Close()
 }
