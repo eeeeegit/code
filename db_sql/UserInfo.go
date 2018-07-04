@@ -2,8 +2,6 @@ package db_sql
 
 import (
 	"time"
-
-	_ "github.com/jinzhu/gorm/dialects/mysql"
 )
 
 type UserInfo struct {
