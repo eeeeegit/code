@@ -4,12 +4,12 @@ import (
 	"errors"
 	"fmt"
 
-	"../proto"
+	proto2 "../proto2"
 
 	"github.com/davyxu/cellnet"
 )
 
-var steps []proto.Step
+var steps []proto2.Step
 var chessTB [8][8]int32
 var currChair int32
 
@@ -19,10 +19,10 @@ func init() {
 
 func HandleMsg(ev cellnet.Event) {
 	switch msg := ev.Message().(type) {
-	case *proto.PutReq:
+	case *proto2.PutReq:
 		fmt.Println("message recv ", msg.X, msg.Y)
 
-		ev.Session().Send(&proto.PutAck{
+		ev.Session().Send(&proto2.PutAck{
 			X:         2,
 			Y:         3,
 			PutChair:  1,
@@ -50,11 +50,11 @@ func AddStep(chair, x, y int32) error {
 		return errors.New("当前不是你操作，请耐心等待")
 	}
 
-	var step proto.Step
+	var step proto2.Step
 	step.X = x
 	step.Y = y
 
-	steps = append(steps, proto.Step{chair, x, y})
+	steps = append(steps, proto2.Step{chair, x, y})
 	chessTB[x][y] = chair + 1
 
 	currChair = (currChair + 1) % 2
@@ -62,7 +62,7 @@ func AddStep(chair, x, y int32) error {
 	return nil
 }
 
-func GetLastStep() proto.Step {
+func GetLastStep() proto2.Step {
 	return steps[len(steps)-1]
 }
 
@@ -70,6 +70,6 @@ func GetNextChair() int32 {
 	return currChair
 }
 
-func GetSteps() *[]proto.Step {
+func GetSteps() *[]proto2.Step {
 	return &steps
 }
